@@ -25,8 +25,8 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
+    protected FirebaseAuth mAuth;
+    protected FirebaseAuth.AuthStateListener mAuthListener;
     private static final String TAG = "MainActivity";
     public static final int RC_SIGN_IN=1;
     @Override
@@ -37,15 +37,14 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+       /* FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
-        });
+        });*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
+       /* mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -79,7 +78,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 // ...
             }
-        };
+        };*/
     }
 
 public void onActivityResult(int requestCode, int resultCode,Intent data){
@@ -159,7 +158,7 @@ public void onActivityResult(int requestCode, int resultCode,Intent data){
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-        @Override
+       /* @Override
         public void onPause() {
             super.onPause();
             mAuth.addAuthStateListener(mAuthListener);
@@ -170,6 +169,6 @@ public void onActivityResult(int requestCode, int resultCode,Intent data){
             if (mAuthListener != null) {
                 mAuth.removeAuthStateListener(mAuthListener);
             }
-        }
+        }*/
 
 }
