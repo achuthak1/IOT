@@ -3,6 +3,7 @@ package com.example.hp.iot;
 
 
         import android.content.Intent;
+        import android.net.Uri;
         import android.os.Bundle;
         import android.support.annotation.NonNull;
         import android.support.v7.app.AppCompatActivity;
@@ -18,6 +19,7 @@ package com.example.hp.iot;
         import com.google.android.gms.tasks.Task;
         import com.google.firebase.auth.AuthResult;
         import com.google.firebase.auth.FirebaseAuth;
+        import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -94,6 +96,7 @@ public class SignUpActivity extends AppCompatActivity {
                                     Toast.makeText(SignUpActivity.this, "Authentication failed." + task.getException(),
                                             Toast.LENGTH_SHORT).show();
                                 } else {
+
                                     startActivity(new Intent(SignUpActivity.this, MainActivity.class));
                                     finish();
                                 }
@@ -103,6 +106,7 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
     }
+
 
     @Override
     protected void onResume() {

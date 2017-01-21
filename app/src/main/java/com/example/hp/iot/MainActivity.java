@@ -1,6 +1,11 @@
 package com.example.hp.iot;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -15,6 +20,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
@@ -29,6 +36,37 @@ public class MainActivity extends AppCompatActivity
     protected FirebaseAuth.AuthStateListener mAuthListener;
     private static final String TAG = "MainActivity";
     public static final int RC_SIGN_IN=1;
+    NavigationView navigationView;
+    SqlLiteHelper db = new SqlLiteHelper(this);
+    TextView result;
+    TextView name;
+    TextView email;
+    Button on;
+    Button off;
+    private Boolean isOnline()  {
+        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        if(ni != null && ni.isConnected())
+            return true;
+
+        return false;
+    }
+
+    public void checkNetwork() throws Exception
+    {
+        if(isOnline())
+        {
+            TextView error_msg=(TextView)findViewById(R.id.network_status);
+            error_msg.setText("Online");
+        }
+        else
+        {
+            TextView error_msg=(TextView)findViewById(R.id.network_status);
+            error_msg.setText("Offline");
+            Toast.makeText(getApplicationContext(),"No network",Toast.LENGTH_LONG).show();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mAuth = FirebaseAuth.getInstance();
@@ -37,14 +75,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-       /* FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -52,39 +82,75 @@ public class MainActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-       /* mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    Toast.makeText(MainActivity.this,"Succesfully signed into ur account",Toast.LENGTH_SHORT).show();
-                    //onSignedInInitialize(user.getDisplayName());
-                } else {
-                    // User is signed out
-                    //onSignedOutCleanup();
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
-                                    .setProviders(Arrays.asList(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build(),
-                                            new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
-                                    .build(),
-                            RC_SIGN_IN);
+
+        getCurrentUser();
+        result=(TextView)findViewById(R.id.upload_msg);
+        final TextView led_status=(TextView)findViewById(R.id.led_status);
+
+
+        on=(Button)findViewById(R.id.led_on);
+        off=(Button)findViewById(R.id.led_off);
+
+        if(isOnline()){
+            TextView network_msg=(TextView)findViewById(R.id.network_status);
+            network_msg.setText("Online");
+        }
+        on.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+
+                try {
+                    checkNetwork();
+                    if(db.insertStatus("on")){
+                        led_status.setText("On");
+                        Toast.makeText(getApplicationContext(), "Inserted on status successfully",Toast.LENGTH_LONG).show();
+                    }
+                    else{
+                        led_status.setText("Error");
+                        Toast.makeText(getApplicationContext(), "error inserting",Toast.LENGTH_LONG).show();
+                    }
+                    new LedDataAsyncTask().execute("on","http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?private_key=rzR4MGmxPkHNKV0n5nJb");
+                    Toast.makeText(getApplicationContext(),"ON",Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    System.out.println("Error::"+e);
                 }
-                // ...
             }
-        };*/
+        });
+        off.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                try {
+                    checkNetwork();
+                    if(db.insertStatus("off")) {
+                        led_status.setText("Off");
+                        Toast.makeText(getApplicationContext(), "Inserted off status successfully", Toast.LENGTH_LONG).show();
+                    }
+                    else {
+                        led_status.setText("Error");
+                        Toast.makeText(getApplicationContext(), "error inserting", Toast.LENGTH_LONG).show();
+                    }
+                    new LedDataAsyncTask().execute("off","http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?private_key=rzR4MGmxPkHNKV0n5nJb");
+                    Toast.makeText(getApplicationContext(), "OFF",Toast.LENGTH_LONG).show();
+
+                } catch (Exception e) {
+                    //TODO Auto-generated catch block
+                    System.out.println("Error::"+e);
+                }
+
+            }
+        });
     }
 
 public void onActivityResult(int requestCode, int resultCode,Intent data){
+
     super.onActivityResult(requestCode,resultCode,data);
     if(requestCode==RC_SIGN_IN){
         if(resultCode==RESULT_OK){
+
             Toast.makeText(this,"Signed In",Toast.LENGTH_SHORT).show();
         }else if(resultCode==RESULT_CANCELED) {
             Toast.makeText(this, "Sign in Cancelled", Toast.LENGTH_SHORT).show();
@@ -128,11 +194,6 @@ public void onActivityResult(int requestCode, int resultCode,Intent data){
 
         return super.onOptionsItemSelected(item);
     }
-   /* private void onSignedInInitialize(String displayName) {
-    }
-    private void onSignedOutCleanup(){
-
-    }*/
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -158,17 +219,46 @@ public void onActivityResult(int requestCode, int resultCode,Intent data){
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-       /* @Override
-        public void onPause() {
-            super.onPause();
-            mAuth.addAuthStateListener(mAuthListener);
+    protected void getCurrentUser(){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String u_name,u_email;
+        View hView =  navigationView.getHeaderView(0);
+        name=(TextView)hView.findViewById(R.id.current_user);
+        email=(TextView)hView.findViewById(R.id.current_user_mailid);
+        if (user != null) {
+            // Name, email address, and profile photo Url
+            u_name = user.getDisplayName();
+            u_email = user.getEmail();
+            Uri photoUrl = user.getPhotoUrl();
+            name.setText(u_name);
+            email.setText(u_email);
+            // The user's ID, unique to the Firebase project. Do NOT use this value to
+            // authenticate with your backend server, if you have one. Use
+            // FirebaseUser.getToken() instead.
+            String uid = user.getUid();
+
         }
+    }
+    public void setContentText(String msg) {
+           result.setText(msg);
+       }
+    private class LedDataAsyncTask extends AsyncTask<String,Void,String> {
+
         @Override
-        public void onResume() {
-            super.onResume();
-            if (mAuthListener != null) {
-                mAuth.removeAuthStateListener(mAuthListener);
-            }
-        }*/
+        protected String doInBackground(String... params) {
+            String message=HttpPostData.postData(params[0],params[1]);
+            return message;
+        }
+        protected void onPostExecute(String msg){
+            setContentText(msg);
+        }
+    }
+    private class LedDataRetrieveAsyncTask extends AsyncTask<String,Void,String>{
+        @Override
+        protected String doInBackground(String... params) {
+            String message=HttpGetData.GetText(params[0]);
+            return message;
+        }
+    }
 
 }
