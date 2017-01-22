@@ -25,10 +25,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -41,8 +47,16 @@ public class MainActivity extends AppCompatActivity
     TextView result;
     TextView name;
     TextView email;
+    TextView led_status;
+
+    Calendar c = Calendar.getInstance();
+    //System.out.println("Current time => " + c.getTime());
+
+    SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+    String formattedDate = df.format(c.getTime());
     Button on;
     Button off;
+    Button display;
     private Boolean isOnline()  {
         ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
@@ -69,6 +83,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Toast.makeText(this,"Signed In",Toast.LENGTH_SHORT).show();
         mAuth = FirebaseAuth.getInstance();
 
         super.onCreate(savedInstanceState);
@@ -87,15 +102,17 @@ public class MainActivity extends AppCompatActivity
 
         getCurrentUser();
         result=(TextView)findViewById(R.id.upload_msg);
-        final TextView led_status=(TextView)findViewById(R.id.led_status);
+        result.setText(formattedDate);
+        led_status=(TextView)findViewById(R.id.led_status);
 
 
         on=(Button)findViewById(R.id.led_on);
         off=(Button)findViewById(R.id.led_off);
-
+        display=(Button)findViewById(R.id.data_display);
         if(isOnline()){
             TextView network_msg=(TextView)findViewById(R.id.network_status);
             network_msg.setText("Online");
+            new LedDataRetrieveAsyncTask().execute();
         }
         on.setOnClickListener(new View.OnClickListener() {
 
@@ -143,21 +160,32 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+        display.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                try{
+                    if(isOnline()){
+                        new LedDataRetrieveAsyncTask().execute();
+                    }
+
+                }catch(Exception e){
+                    Log.e(TAG,"Error fetching data",e);
+                }
+            }
+        }
+        );
     }
 
-public void onActivityResult(int requestCode, int resultCode,Intent data){
-
+/*public void onActivityResult(int requestCode, int resultCode,Intent data){
     super.onActivityResult(requestCode,resultCode,data);
     if(requestCode==RC_SIGN_IN){
         if(resultCode==RESULT_OK){
-
             Toast.makeText(this,"Signed In",Toast.LENGTH_SHORT).show();
         }else if(resultCode==RESULT_CANCELED) {
             Toast.makeText(this, "Sign in Cancelled", Toast.LENGTH_SHORT).show();
         }
     }
     finish();
-}
+}*/
 
     @Override
     public void onBackPressed() {
@@ -187,10 +215,19 @@ public void onActivityResult(int requestCode, int resultCode,Intent data){
         if (id == R.id.action_settings) {
             return true;
         }
-       /* if(id==R.id.sign_out){
-            AuthUI.getInstance().signOut(this);
+        if(id==R.id.action_signout){
+            AuthUI.getInstance()
+                    .signOut(this)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        public void onComplete(@NonNull Task<Void> task) {
+                            // user is now signed out
+                            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                            finish();
+                        }
+                    });
+            Toast.makeText(this,"Signed out",Toast.LENGTH_SHORT).show();
             return true;
-        }*/
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -253,12 +290,23 @@ public void onActivityResult(int requestCode, int resultCode,Intent data){
             setContentText(msg);
         }
     }
-    private class LedDataRetrieveAsyncTask extends AsyncTask<String,Void,String>{
+    private class LedDataRetrieveAsyncTask extends AsyncTask<Void,Void,String>{
         @Override
-        protected String doInBackground(String... params) {
-            String message=HttpGetData.GetText(params[0]);
-            return message;
+        protected String doInBackground(Void... params){
+            String data=new HttpGetData().fetchItems();
+            return data;
         }
+        protected void onPostExecute(String msg){
+            setStatusText(msg);
+        }
+    }
+    public void setStatusText(String msg){
+        String[] data=msg.split("\\W+");
+        String ledStatus=data[3];
+        String motion_value=data[4];
+
+        result.setText(motion_value);
+        led_status.setText(ledStatus);
     }
 
 }

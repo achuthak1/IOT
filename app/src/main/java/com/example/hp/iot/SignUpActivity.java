@@ -9,6 +9,7 @@ package com.example.hp.iot;
         import android.support.v7.app.AppCompatActivity;
         import android.support.v7.widget.Toolbar;
         import android.text.TextUtils;
+        import android.util.Log;
         import android.view.View;
         import android.widget.Button;
         import android.widget.EditText;
@@ -22,12 +23,13 @@ package com.example.hp.iot;
         import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends AppCompatActivity {
-
+    public static final int RC_SIGN_IN=1;
+    private static final String TAG ="SignUpActivity" ;
     private EditText inputEmail, inputPassword;
     private Button btnSignIn, btnSignUp, btnResetPassword;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
-
+    private FirebaseAuth.AuthStateListener mAuthListener;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +52,22 @@ public class SignUpActivity extends AppCompatActivity {
                 startActivity(new Intent(SignupActivity.this, ResetPasswordActivity.class));
             }
         });*/
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                    finish();
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                // ...
+            }
+        };
 
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +114,6 @@ public class SignUpActivity extends AppCompatActivity {
                                     Toast.makeText(SignUpActivity.this, "Authentication failed." + task.getException(),
                                             Toast.LENGTH_SHORT).show();
                                 } else {
-
                                     startActivity(new Intent(SignUpActivity.this, MainActivity.class));
                                     finish();
                                 }
@@ -106,8 +123,31 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
     }
-
-
+    @Override
+    public void onStart() {
+        super.onStart();
+        auth.addAuthStateListener(mAuthListener);
+    }
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            auth.removeAuthStateListener(mAuthListener);
+        }
+    }
+    /*public void onActivityResult(int requestCode, int resultCode,Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode==RC_SIGN_IN){
+            if(resultCode==RESULT_OK){
+                Toast.makeText(this,"Signed In",Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                finish();
+            }else if(resultCode==RESULT_CANCELED) {
+                Toast.makeText(this, "Sign in Cancelled", Toast.LENGTH_SHORT).show();
+            }
+        }
+        finish();
+    }*/
     @Override
     protected void onResume() {
         super.onResume();
