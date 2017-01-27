@@ -20,18 +20,14 @@ public class HttpPostData {
         try
         {
             // Defined URL  where to send data
-            URL url = new URL(link+"&led="+status+"&motion_value=2");
-
+          //  URL url = new URL(link+"&led="+status+"&motion_value=2");
+            URL url = new URL(link+"led="+status);
             // Send POST data request
-
             URLConnection conn = url.openConnection();
-
             // Get the server response
-
             reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             StringBuilder sb = new StringBuilder();
             String line = null;
-
             // Read Server Response
             while((line = reader.readLine()) != null)
             {

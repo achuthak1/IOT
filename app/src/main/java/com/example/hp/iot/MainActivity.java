@@ -36,12 +36,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     protected FirebaseAuth mAuth;
     protected FirebaseAuth.AuthStateListener mAuthListener;
     private static final String TAG = "MainActivity";
     public static final int RC_SIGN_IN=1;
+
     NavigationView navigationView;
     SqlLiteHelper db = new SqlLiteHelper(this);
     TextView result;
@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity
     TextView email;
     TextView led_status;
 
+    //String url="http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?privatekey=rzR4MGmxPkHNKV0n5nJb";
+    String url="http://iotelectricity.000webhostapp.com/iot.php?";
     Calendar c = Calendar.getInstance();
     //System.out.println("Current time => " + c.getTime());
 
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity
     Button on;
     Button off;
     Button display;
+
     private Boolean isOnline()  {
         ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
@@ -105,7 +108,6 @@ public class MainActivity extends AppCompatActivity
         result.setText(formattedDate);
         led_status=(TextView)findViewById(R.id.led_status);
 
-
         on=(Button)findViewById(R.id.led_on);
         off=(Button)findViewById(R.id.led_off);
         display=(Button)findViewById(R.id.data_display);
@@ -129,7 +131,8 @@ public class MainActivity extends AppCompatActivity
                         led_status.setText("Error");
                         Toast.makeText(getApplicationContext(), "error inserting",Toast.LENGTH_LONG).show();
                     }
-                    new LedDataAsyncTask().execute("on","http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?private_key=rzR4MGmxPkHNKV0n5nJb");
+                   // new LedDataAsyncTask().execute("on","http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?private_key=rzR4MGmxPkHNKV0n5nJb");
+                    new LedDataAsyncTask().execute("on",url);
                     Toast.makeText(getApplicationContext(),"ON",Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
@@ -137,6 +140,7 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+
         off.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // TODO Auto-generated method stub
@@ -150,16 +154,17 @@ public class MainActivity extends AppCompatActivity
                         led_status.setText("Error");
                         Toast.makeText(getApplicationContext(), "error inserting", Toast.LENGTH_LONG).show();
                     }
-                    new LedDataAsyncTask().execute("off","http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?private_key=rzR4MGmxPkHNKV0n5nJb");
+                    //new LedDataAsyncTask().execute("off","http://data.sparkfun.com/input/AJE3QqanMwfYV20dJdOj?private_key=rzR4MGmxPkHNKV0n5nJb");
+                    new LedDataAsyncTask().execute("off",url);
                     Toast.makeText(getApplicationContext(), "OFF",Toast.LENGTH_LONG).show();
 
                 } catch (Exception e) {
                     //TODO Auto-generated catch block
                     System.out.println("Error::"+e);
                 }
-
             }
         });
+
         display.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
                 try{
@@ -174,7 +179,6 @@ public class MainActivity extends AppCompatActivity
         }
         );
     }
-
 /*public void onActivityResult(int requestCode, int resultCode,Intent data){
     super.onActivityResult(requestCode,resultCode,data);
     if(requestCode==RC_SIGN_IN){
@@ -186,7 +190,6 @@ public class MainActivity extends AppCompatActivity
     }
     finish();
 }*/
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -212,9 +215,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+      /*  if (id == R.id.action_settings) {
             return true;
-        }
+        }*/
         if(id==R.id.action_signout){
             AuthUI.getInstance()
                     .signOut(this)
@@ -238,7 +241,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+     /*   if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
@@ -250,7 +253,7 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
-        }
+        }*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -302,10 +305,10 @@ public class MainActivity extends AppCompatActivity
     }
     public void setStatusText(String msg){
         String[] data=msg.split("\\W+");
-        String ledStatus=data[3];
-        String motion_value=data[4];
+        String ledStatus=data[0];
+        //String motion_value=data[4];
 
-        result.setText(motion_value);
+        //result.setText(motion_value);
         led_status.setText(ledStatus);
     }
 

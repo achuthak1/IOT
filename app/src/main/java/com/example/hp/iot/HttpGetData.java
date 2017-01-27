@@ -10,7 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Created by HP on 21/01/2017.
+ * Created by Sumanth-Achutha-Uday on 21/01/2017.
  */
 
 public class HttpGetData {
@@ -43,7 +43,8 @@ public class HttpGetData {
     public String fetchItems() {
         String csvString="";
         try {
-            String url = Uri.parse("http://data.sparkfun.com/output/AJE3QqanMwfYV20dJdOj.csv")
+           // String url = Uri.parse("http://data.sparkfun.com/output/AJE3QqanMwfYV20dJdOj.csv")
+            String url = Uri.parse("http://iotelectricity.000webhostapp.com/disp.php")
                     .buildUpon()
                     .build().toString();
             csvString = getUrlString(url);
